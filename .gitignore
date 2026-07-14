@@ -1,0 +1,12 @@
+# Project Relay local runtime (not part of the public archive)
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+
+# Build output
+_site/
+
+# macOS
+.DS_Store
