@@ -1,0 +1,1795 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <meta name="description" content="winter road — a haiga space by mozare" />
+  <title>winter road — a haiga space by mozare · v10.2</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050505;
+      --root: #d7d7d1;
+      --poem: #eeeeea;
+      --guide: #8d8d87;
+      --signature-idle: #8a8a84;
+      --signature-search: #82827c;
+      --signature-reading: #7d7d77;
+      --focus: rgba(165, 187, 201, .84);
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --root-size: 14.5px;
+      --poem-size: 18px;
+      --guide-size: 11.5px;
+      --signature-size: 10.5px;
+      --leading: 1.4;
+      --ease-out: cubic-bezier(.16, 1, .3, 1);
+      --proximity-size: 390px;
+      --proximity-opacity: 0;
+      --proximity-x: 50vw;
+      --proximity-y: 50vh;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--poem);
+      font-family: var(--font);
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+      min-height: 100dvh;
+    }
+
+    button { font: inherit; }
+
+    .field {
+      position: fixed;
+      inset: 0;
+      min-height: 100dvh;
+      overflow: hidden;
+      isolation: isolate;
+      cursor: default;
+      touch-action: pinch-zoom;
+      opacity: 1;
+      transition: opacity 320ms var(--ease-out);
+      background:
+        radial-gradient(circle at 48% 42%, rgba(255,255,255,.013), transparent 42%),
+        var(--bg);
+    }
+
+    .field.is-statement-covered {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .field::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, transparent 0 66%, rgba(0,0,0,.13) 100%);
+    }
+
+    .proximity-field {
+      position: fixed;
+      z-index: 2;
+      left: var(--proximity-x);
+      top: var(--proximity-y);
+      width: var(--proximity-size);
+      height: var(--proximity-size);
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: var(--proximity-opacity);
+      background: radial-gradient(circle,
+        rgba(238,238,234,.020) 0,
+        rgba(238,238,234,.012) 34%,
+        rgba(238,238,234,.005) 58%,
+        rgba(238,238,234,0) 84%);
+      transition: opacity 260ms ease;
+    }
+
+    .entry {
+      position: absolute;
+      z-index: 12;
+      left: max(24px, calc(env(safe-area-inset-left) + 8vw));
+      top: 42dvh;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .root-inscription,
+    .guide {
+      transition: opacity 300ms var(--ease-out);
+    }
+
+    .root-inscription {
+      margin: 0;
+      color: var(--root);
+      font-size: var(--root-size);
+      line-height: 1.2;
+      font-weight: 400;
+      letter-spacing: 0;
+      opacity: .92;
+    }
+
+    .guide {
+      margin: 7px 0 0;
+      color: var(--guide);
+      font-size: var(--guide-size);
+      line-height: 1.35;
+      font-weight: 400;
+      letter-spacing: .014em;
+      opacity: .79;
+    }
+
+    .entry.is-reading .root-inscription { opacity: .44; }
+    .entry.is-guide-learned .guide { opacity: 0; }
+
+    .signature {
+      position: absolute;
+      z-index: 21;
+      right: max(22px, calc(env(safe-area-inset-right) + 12px));
+      bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px));
+      margin: 0;
+      padding: 12px;
+      border: 0;
+      background: transparent;
+      color: var(--signature-idle);
+      font-size: 11px;
+      line-height: 1.3;
+      font-weight: 400;
+      letter-spacing: .02em;
+      text-align: right;
+      opacity: 1;
+      pointer-events: auto;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 600ms cubic-bezier(.33, 1, .68, 1);
+    }
+
+    .signature-word {
+      transition: color 180ms ease;
+    }
+
+    .signature:hover .signature-word,
+    .signature:focus-visible .signature-word {
+      color: var(--root);
+    }
+
+    .signature:focus-visible,
+    .statement-return:focus-visible {
+      outline: 1px solid var(--focus);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    .field.is-searching .signature { color: var(--signature-search); }
+    .field.is-reading .signature { color: var(--signature-reading); }
+
+    .sites {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+    }
+
+    .haiku {
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: block;
+      min-width: 44px;
+      min-height: 44px;
+      margin: 0;
+      padding: 10px 12px;
+      border: 0;
+      background: transparent;
+      color: var(--poem);
+      font-size: var(--site-font-size, var(--poem-size));
+      line-height: var(--leading);
+      font-weight: 400;
+      letter-spacing: -.004em;
+      text-align: left;
+      white-space: normal;
+      opacity: var(--site-opacity, 0);
+      filter: blur(var(--site-blur, 1px));
+      transform: translate3d(var(--site-x, -9999px), var(--site-y, -9999px), 0);
+      transition:
+        opacity 130ms linear,
+        filter 170ms linear;
+      pointer-events: none;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .haiku.is-readable,
+    .haiku.is-pinned,
+    .haiku:focus-visible {
+      pointer-events: auto;
+    }
+
+    .haiku.is-pinned {
+      opacity: 1;
+      filter: blur(0);
+    }
+
+    .haiku.is-preview-fading {
+      opacity: 0;
+      filter: blur(.18px);
+      pointer-events: none;
+      transition-duration: 900ms;
+      transition-timing-function: linear;
+    }
+
+    .haiku.is-pinned-fading {
+      opacity: 0;
+      filter: blur(.18px);
+      pointer-events: none;
+      transition-duration: 8000ms;
+      transition-timing-function: linear;
+    }
+
+    .haiku:focus-visible {
+      --site-opacity: 1;
+      --site-blur: 0px;
+      outline: 1px solid var(--focus);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+
+    .haiku-line {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .statement-dialog {
+      width: 100vw;
+      max-width: none;
+      height: 100dvh;
+      max-height: none;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--poem);
+      overflow: hidden;
+    }
+
+    .statement-dialog::backdrop {
+      background: transparent;
+    }
+
+    .statement-plane {
+      position: fixed;
+      inset: 0;
+      min-height: 100dvh;
+      overflow: auto;
+      overscroll-behavior: contain;
+      background:
+        radial-gradient(circle at 48% 42%, rgba(255,255,255,.010), transparent 42%),
+        var(--bg);
+      opacity: 0;
+      transition: opacity 320ms var(--ease-out);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .statement-dialog.is-visible .statement-plane {
+      opacity: 1;
+    }
+
+    .statement-layout {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      padding:
+        max(40px, calc(env(safe-area-inset-top) + 24px))
+        max(28px, calc(env(safe-area-inset-right) + 24px))
+        max(84px, calc(env(safe-area-inset-bottom) + 68px))
+        max(24px, calc(env(safe-area-inset-left) + 8vw));
+    }
+
+    .statement-copy {
+      width: min(34rem, 100%);
+      margin: 0;
+      color: #c7c7c1;
+      font-size: 16px;
+      line-height: 1.58;
+      font-weight: 400;
+      letter-spacing: 0;
+      opacity: 0;
+      transform: translateY(4px);
+      transition:
+        opacity 460ms var(--ease-out) 70ms,
+        transform 460ms var(--ease-out) 70ms;
+      outline: none;
+    }
+
+    .statement-dialog.is-visible .statement-copy {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .statement-copy p {
+      margin: 0 0 1em;
+    }
+
+    .statement-copy p:last-child {
+      margin-bottom: 0;
+    }
+
+    .statement-copy em {
+      color: #d2d2cc;
+      font-style: italic;
+    }
+
+    .statement-return {
+      position: fixed;
+      z-index: 2;
+      right: max(22px, calc(env(safe-area-inset-right) + 12px));
+      bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px));
+      margin: 0;
+      padding: 12px;
+      border: 0;
+      background: transparent;
+      color: var(--signature-idle);
+      font: inherit;
+      font-size: 11px;
+      line-height: 1.3;
+      font-weight: 400;
+      letter-spacing: .02em;
+      cursor: pointer;
+      opacity: 0;
+      transition:
+        color 180ms ease,
+        opacity 360ms var(--ease-out) 110ms;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .statement-dialog.is-visible .statement-return {
+      opacity: 1;
+    }
+
+    .statement-return:hover,
+    .statement-return:focus-visible {
+      color: var(--root);
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0,0,0,0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    @media (max-width: 760px), (hover: none), (pointer: coarse) {
+      :root {
+        --root-size: 14px;
+        --poem-size: 16.5px;
+        --guide-size: 11px;
+        --signature-size: 10px;
+        --leading: 1.42;
+        --proximity-size: 250px;
+      }
+
+      .entry {
+        left: max(24px, calc(env(safe-area-inset-left) + 18px));
+        top: 40dvh;
+      }
+
+      .signature,
+      .statement-return {
+        right: max(12px, calc(env(safe-area-inset-right) + 6px));
+        left: auto;
+        bottom: max(12px, calc(env(safe-area-inset-bottom) + 6px));
+        font-size: 11px;
+      }
+
+      .statement-layout {
+        min-height: 100%;
+        align-items: flex-start;
+        padding:
+          max(74px, calc(env(safe-area-inset-top) + 16dvh))
+          max(24px, calc(env(safe-area-inset-right) + 18px))
+          max(88px, calc(env(safe-area-inset-bottom) + 72px))
+          max(24px, calc(env(safe-area-inset-left) + 18px));
+      }
+
+      .statement-copy {
+        width: 100%;
+        max-width: 32rem;
+        font-size: 15.5px;
+        line-height: 1.56;
+      }
+
+      .haiku { padding: 12px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      .haiku.is-preview-fading,
+      .haiku.is-pinned-fading {
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="field" id="field" aria-label="winter road, a haiga space by mozare">
+    <div class="proximity-field" id="proximityField" aria-hidden="true"></div>
+
+    <header class="entry" id="entry">
+      <h1 class="root-inscription">winter road</h1>
+      <p class="guide" id="guide">move slowly · click to keep</p>
+    </header>
+
+    <section class="sites" id="sites" aria-label="hidden haiku"></section>
+
+    <button class="signature" id="statementTrigger" type="button"
+      aria-haspopup="dialog" aria-controls="statementDialog">
+      <span>by mozare</span><span aria-hidden="true"> · </span><span class="signature-word">statement</span>
+    </button>
+    <div class="sr-only" id="hint">Press Enter or Space to keep this haiku visible. Press Escape to dismiss it.</div>
+    <div class="sr-only" id="live" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <dialog class="statement-dialog" id="statementDialog" aria-labelledby="statementHeading">
+    <div class="statement-plane" id="statementPlane">
+      <div class="statement-layout">
+        <section class="statement-copy" id="statementCopy" tabindex="-1">
+          <h2 class="sr-only" id="statementHeading">Statement</h2>
+          <p>I began with two words: <em>winter road</em>. Through permutation, they opened toward other objects, images, and tensions.</p>
+          <p>Nine haiku are dispersed across a dark interface, invisible until approached. The reader’s movement becomes a condition of visibility.</p>
+          <p>Haiku opens a small interval in language, where an image exceeds the words that hold it. Haiga gives that interval a surface, letting word and image approach without resolving one another. I call <em>Winter Road</em> a digital haiga space.</p>
+        </section>
+      </div>
+      <button class="statement-return" id="statementReturn" type="button"
+        aria-label="Close the statement and return to Winter Road">return</button>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const CONFIG = Object.freeze({
+        PIN_SOLO_HOLD_MS: 12000,
+        PIN_RELATION_HOLD_MS: 12000,
+        PIN_FADE_MS: 6000,
+        READABLE_THRESHOLD: 0.48,
+        RELATION_THRESHOLD: 0.62,
+        TOUCH_DRAG_PREVIEW_MS: 8000,
+        TOUCH_PREVIEW_FADE_MS: 900,
+        DESKTOP_EXIT_MS: 320,
+        ENTRY_IDLE_DELAY_MS: 500,
+        TOUCH_TAP_MOVE_PX: 16,
+        TOUCH_TAP_MAX_MS: 700,
+        TOUCH_CLICK_GUARD_MS: 750,
+      });
+
+      const POEMS = Object.freeze([
+        { id: 'winter-road-absence-wind', lines: ['winter road', 'nobody comes here', 'only the wind drives'] },
+        { id: 'winter-road-darkness-wind', lines: ['winter road', 'absolute darkness', 'only the wind drives'] },
+        { id: 'winter-road-only-wind', lines: ['winter road', 'only the wind'] },
+        { id: 'winter-darkness-road-driven', lines: ['winter darkness', 'wind drives the road'] },
+        { id: 'dark-road-only-wind', lines: ['the dark road', 'only the wind'] },
+        { id: 'winter-silence-only-wind', lines: ['absolute winter silence', 'only the wind'] },
+        { id: 'winter-road-white-absence', lines: ['winter road', 'everything supposed to be white', 'nobody comes here'] },
+        { id: 'winter-darkness-white', lines: ['winter darkness', 'everywhere supposed to be white'] },
+        { id: 'winter-road-absence-white', lines: ['winter road', 'nobody comes here', 'everything supposed to be white'] }
+      ]);
+
+      // Authored spatial topology. The grid is semantic, not a visual index:
+      // upper region moves from silence/compression toward darkness;
+      // the middle turns absence and agency through the road;
+      // the lower region holds the whiteness/non-arrival permutations.
+      // Each load rotates this whole topology, preserving neighborhoods while
+      // changing which pressure is encountered nearest the root inscription.
+      const SEMANTIC_GRID = Object.freeze([
+        Object.freeze(['winter-silence-only-wind', 'winter-road-only-wind', 'winter-road-darkness-wind']),
+        Object.freeze(['winter-road-absence-wind', 'winter-darkness-road-driven', 'dark-road-only-wind']),
+        Object.freeze(['winter-road-white-absence', 'winter-road-absence-white', 'winter-darkness-white'])
+      ]);
+
+      const DESKTOP_CELLS = Object.freeze([
+        [.18, .18], [.49, .15], [.79, .24],
+        [.24, .47], [.56, .43], [.83, .56],
+        [.17, .75], [.48, .82], [.77, .79]
+      ]);
+
+      const MOBILE_CELLS = Object.freeze([
+        [.20, .14], [.54, .20], [.80, .28],
+        [.20, .44], [.54, .50], [.81, .57],
+        [.22, .70], [.56, .81], [.76, .89]
+      ]);
+
+      const field = document.getElementById('field');
+      const sitesEl = document.getElementById('sites');
+      const entry = document.getElementById('entry');
+      const guide = document.getElementById('guide');
+      const signature = document.getElementById('statementTrigger');
+      const proximityField = document.getElementById('proximityField');
+      const live = document.getElementById('live');
+      const statementDialog = document.getElementById('statementDialog');
+      const statementPlane = document.getElementById('statementPlane');
+      const statementCopy = document.getElementById('statementCopy');
+      const statementReturn = document.getElementById('statementReturn');
+
+      const fineHover = matchMedia('(hover: hover) and (pointer: fine)');
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+      const state = {
+        seed: Math.floor(Math.random() * 0x7fffffff),
+        layoutRotation: 0,
+        layoutProfile: '',
+        mode: '',
+        viewport: null,
+        sites: [],
+        pointer: { x: innerWidth / 2, y: innerHeight / 2, active: false, type: 'mouse' },
+        searching: false,
+        guideExplored: false,
+        guideKept: false,
+        guideLearned: false,
+        activeId: null,
+        pinnedId: null,
+        relationId: null,
+        relationExtended: false,
+        touch: null,
+        ignoreClickUntil: 0,
+        pinFadeCleanup: null,
+        suspended: false,
+        pendingRecompose: false,
+        statementOpenedByPush: false,
+        statementTransition: 0,
+        historyFallback: 0,
+        fieldSnapshot: null,
+        deadlines: {
+          temporary: 0,
+          pinHold: 0,
+          pinFade: 0,
+          previewFade: 0
+        },
+        remaining: {
+          temporary: 0,
+          pinHold: 0,
+          pinFade: 0,
+          previewFade: 0
+        },
+        pausedVisuals: {
+          pin: null,
+          preview: null
+        },
+        previewFadeId: null,
+        timers: {
+          temporary: 0,
+          pinHold: 0,
+          pinFade: 0,
+          previewFade: 0,
+          entry: 0,
+          resize: 0,
+          light: 0
+        }
+      };
+
+      function mode() {
+        return fineHover.matches && innerWidth > 760 ? 'desktop' : 'mobile';
+      }
+
+      function visualViewportMetrics() {
+        const vv = window.visualViewport;
+        return {
+          left: vv ? vv.offsetLeft : 0,
+          top: vv ? vv.offsetTop : 0,
+          width: vv ? vv.width : innerWidth,
+          height: vv ? vv.height : innerHeight
+        };
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function seeded(index, salt) {
+        let x = (state.seed ^ Math.imul(index + 1, 0x45d9f3b) ^ Math.imul(salt + 5, 0x27d4eb2d)) >>> 0;
+        x ^= x >>> 16;
+        x = Math.imul(x, 0x7feb352d);
+        x ^= x >>> 15;
+        x = Math.imul(x, 0x846ca68b);
+        x ^= x >>> 16;
+        return (x >>> 0) / 4294967296;
+      }
+
+      function requestedLayoutRotation() {
+        const value = Number(new URLSearchParams(location.search).get('layout'));
+        return Number.isInteger(value) && value >= 0 && value <= 3
+          ? value
+          : Math.floor(seeded(0, 91) * 4);
+      }
+
+      function rotateGrid(grid, turns) {
+        let result = grid.map(row => [...row]);
+        for (let turn = 0; turn < turns; turn += 1) {
+          result = result[0].map((_, column) => result.map(row => row[column]).reverse());
+        }
+        return result;
+      }
+
+      function layoutOrder() {
+        const rotated = rotateGrid(SEMANTIC_GRID, state.layoutRotation);
+        return rotated.flat();
+      }
+
+      function layoutProfileName(turns) {
+        return ['absence-first', 'whiteness-first', 'dark-road-first', 'wind-first'][turns] || 'absence-first';
+      }
+
+      function fullText(poem) {
+        return poem.lines.join('\n');
+      }
+
+      function announce(poem) {
+        live.textContent = '';
+        requestAnimationFrame(() => { live.textContent = fullText(poem); });
+      }
+
+      function safeFrame() {
+        const v = state.viewport || visualViewportMetrics();
+        const mobile = state.mode === 'mobile';
+        const side = mobile ? 16 : 24;
+        const top = mobile ? 14 : 20;
+        const bottom = mobile ? 42 : 26;
+        return {
+          left: v.left + side,
+          top: v.top + top,
+          right: v.left + v.width - side,
+          bottom: v.top + v.height - bottom
+        };
+      }
+
+      function revealRadii() {
+        const m = Math.min(state.viewport.width, state.viewport.height);
+        return state.mode === 'mobile'
+          ? { outer: clamp(m * .27, 84, 108), inner: clamp(m * .12, 38, 50) }
+          : { outer: clamp(m * .20, 130, 165), inner: clamp(m * .085, 58, 72) };
+      }
+
+      function setProximityField(x, y, visible = true) {
+        document.documentElement.style.setProperty('--proximity-x', `${x}px`);
+        document.documentElement.style.setProperty('--proximity-y', `${y}px`);
+        document.documentElement.style.setProperty('--proximity-opacity', visible ? '1' : '0');
+      }
+
+      function hideProximityField(delay = 0) {
+        clearTimeout(state.timers.light);
+        state.timers.light = setTimeout(() => {
+          document.documentElement.style.setProperty('--proximity-opacity', '0');
+        }, delay);
+      }
+
+      function updateGuideLearning() {
+        if (state.guideLearned || !state.guideExplored || !state.guideKept) return;
+        state.guideLearned = true;
+        entry.classList.add('is-guide-learned');
+      }
+
+      function markGuideExplored() {
+        if (state.guideLearned || state.guideExplored) return;
+        state.guideExplored = true;
+        updateGuideLearning();
+      }
+
+      function markGuideKept() {
+        if (state.guideLearned || state.guideKept) return;
+        state.guideKept = true;
+        updateGuideLearning();
+      }
+
+      function updateEntryState() {
+        const reading = Boolean(state.activeId || state.pinnedId);
+        const searching = state.searching && !reading;
+        entry.classList.toggle('is-reading', reading);
+        entry.classList.toggle('is-searching', searching);
+        field.classList.toggle('is-reading', reading);
+        field.classList.toggle('is-searching', searching);
+      }
+
+      function scheduleEntryUpdate(delay = CONFIG.ENTRY_IDLE_DELAY_MS) {
+        clearTimeout(state.timers.entry);
+        state.timers.entry = setTimeout(updateEntryState, delay);
+      }
+
+      function expandedRect(rect, amount) {
+        return {
+          left: rect.left - amount,
+          top: rect.top - amount,
+          right: rect.right + amount,
+          bottom: rect.bottom + amount,
+          width: rect.width + amount * 2,
+          height: rect.height + amount * 2
+        };
+      }
+
+      function overlaps(a, b) {
+        return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      }
+
+      function protectedRects() {
+        return [
+          expandedRect(entry.getBoundingClientRect(), 16),
+          expandedRect(signature.getBoundingClientRect(), 18)
+        ];
+      }
+
+      function createSiteButton(poem) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'haiku';
+        button.dataset.id = poem.id;
+        button.setAttribute('aria-label', fullText(poem));
+        button.setAttribute('aria-describedby', 'hint');
+
+        for (const line of poem.lines) {
+          const span = document.createElement('span');
+          span.className = 'haiku-line';
+          span.textContent = line;
+          button.appendChild(span);
+        }
+
+        button.addEventListener('pointerenter', () => {
+          const site = findSite(poem.id);
+          if (site) site.hovered = true;
+          clearTimeout(state.timers.temporary);
+        });
+
+        button.addEventListener('pointerleave', () => {
+          const site = findSite(poem.id);
+          if (site) site.hovered = false;
+          if (state.activeId === poem.id && state.pinnedId !== poem.id) {
+            scheduleTemporaryHide(CONFIG.DESKTOP_EXIT_MS);
+          }
+        });
+
+        button.addEventListener('focus', () => {
+          if (state.pinnedId !== poem.id) revealTemporary(poem.id, 1, 'keyboard');
+        });
+
+        button.addEventListener('blur', () => {
+          if (state.activeId === poem.id && state.pinnedId !== poem.id) {
+            scheduleTemporaryHide(CONFIG.DESKTOP_EXIT_MS);
+          }
+        });
+
+        button.addEventListener('click', event => {
+          event.stopPropagation();
+          if (performance.now() < state.ignoreClickUntil) return;
+          if (state.pinnedId === poem.id) dismissPinned();
+          else pin(poem.id);
+        });
+
+        return button;
+      }
+
+      function buildSites() {
+        state.mode = mode();
+        state.viewport = visualViewportMetrics();
+        guide.textContent = state.mode === 'mobile'
+          ? 'touch and move · tap to keep'
+          : 'move slowly · click to keep';
+        entry.classList.toggle('is-guide-learned', state.guideLearned);
+
+        sitesEl.replaceChildren();
+        state.sites = [];
+
+        const cells = state.mode === 'mobile' ? MOBILE_CELLS : DESKTOP_CELLS;
+        const orderedIds = layoutOrder();
+        const byId = new Map(POEMS.map(poem => [poem.id, poem]));
+        const v = state.viewport;
+
+        orderedIds.forEach((id, cellIndex) => {
+          const poem = byId.get(id);
+          const [nx, ny] = cells[cellIndex];
+          const cell = {
+            x: v.left + nx * v.width,
+            y: v.top + ny * v.height
+          };
+
+          const button = createSiteButton(poem);
+          button.style.visibility = 'hidden';
+          sitesEl.appendChild(button);
+          state.sites.push({
+            poem,
+            id: poem.id,
+            el: button,
+            cell,
+            cellIndex,
+            x: 0,
+            y: 0,
+            rect: null,
+            baseRect: null,
+            hovered: false
+          });
+        });
+
+        requestAnimationFrame(() => {
+          const frame = safeFrame();
+          const guards = protectedRects();
+          // Hidden poems may share visual territory; their authored cells remain primary.
+          // When one poem is pinned, the other search/display positions are
+          // recomposed around it before they can emerge, so a visible pair never overlaps.
+          for (const site of state.sites) {
+            fitAndPlace(site, frame, [], guards);
+            site.baseRect = { ...site.rect };
+            site.el.style.visibility = 'visible';
+          }
+          restoreVisibleStateAfterRecompose();
+        });
+      }
+
+      function fitAndPlace(site, frame, avoidRects = [], guards = protectedRects()) {
+        const base = state.mode === 'mobile' ? 16.5 : 18;
+        const minimum = state.mode === 'mobile' ? 14.6 : 15.4;
+        site.el.style.setProperty('--site-font-size', `${base}px`);
+        site.el.style.transform = 'translate3d(0,0,0)';
+
+        let rect = site.el.getBoundingClientRect();
+        const availableWidth = Math.max(1, frame.right - frame.left);
+        if (rect.width > availableWidth) {
+          const fitted = clamp(base * availableWidth / rect.width, minimum, base);
+          site.el.style.setProperty('--site-font-size', `${fitted.toFixed(2)}px`);
+          rect = site.el.getBoundingClientRect();
+        }
+
+        const width = rect.width;
+        const height = rect.height;
+        const gap = state.mode === 'mobile' ? 22 : 20;
+        const c = site.cell;
+        const candidates = [
+          [c.x - width / 2, c.y - height / 2],
+          [c.x + gap, c.y - height / 2],
+          [c.x - width - gap, c.y - height / 2],
+          [c.x - width / 2, c.y - height - gap],
+          [c.x - width / 2, c.y + gap],
+          [c.x + gap, c.y - height - gap],
+          [c.x - width - gap, c.y - height - gap],
+          [c.x + gap, c.y + gap],
+          [c.x - width - gap, c.y + gap],
+          [frame.left, frame.top],
+          [frame.right - width, frame.top],
+          [frame.left, frame.bottom - height],
+          [frame.right - width, frame.bottom - height],
+          [frame.left + (frame.right - frame.left - width) / 2, frame.top],
+          [frame.left + (frame.right - frame.left - width) / 2, frame.bottom - height],
+          [frame.left, frame.top + (frame.bottom - frame.top - height) / 2],
+          [frame.right - width, frame.top + (frame.bottom - frame.top - height) / 2]
+        ];
+
+        let best = null;
+        let bestPenalty = Infinity;
+
+        candidates.forEach(([left, top], index) => {
+          const candidate = { left, top, right: left + width, bottom: top + height, width, height };
+          const overflow = Math.max(0, frame.left - candidate.left) +
+            Math.max(0, candidate.right - frame.right) +
+            Math.max(0, frame.top - candidate.top) +
+            Math.max(0, candidate.bottom - frame.bottom);
+          const centerDistance = Math.hypot(left + width / 2 - c.x, top + height / 2 - c.y);
+          let penalty = overflow * 100000 + centerDistance + index * 3;
+          for (const guard of guards) if (overlaps(candidate, guard)) penalty += 750000;
+          for (const avoid of avoidRects) {
+            if (avoid && overlaps(candidate, expandedRect(avoid, state.mode === 'mobile' ? 8 : 12))) {
+              penalty += 1000000;
+            }
+          }
+          if (penalty < bestPenalty) {
+            bestPenalty = penalty;
+            best = candidate;
+          }
+        });
+
+        const left = clamp(best.left, frame.left, frame.right - width);
+        const top = clamp(best.top, frame.top, frame.bottom - height);
+        site.x = left;
+        site.y = top;
+        site.rect = { left, top, right: left + width, bottom: top + height, width, height };
+        site.el.style.setProperty('--site-x', `${left}px`);
+        site.el.style.setProperty('--site-y', `${top}px`);
+        site.el.style.transform = '';
+      }
+
+      function applyRect(site, rect) {
+        if (!site || !rect) return;
+        site.x = rect.left;
+        site.y = rect.top;
+        site.rect = { ...rect };
+        site.el.style.setProperty('--site-x', `${rect.left}px`);
+        site.el.style.setProperty('--site-y', `${rect.top}px`);
+      }
+
+      function restoreBasePlacements(preserveId = null) {
+        for (const site of state.sites) {
+          if (site.id === preserveId) continue;
+          if (site.baseRect) applyRect(site, site.baseRect);
+        }
+      }
+
+      function prepareRelationPlacements(pinnedId) {
+        const pinned = findSite(pinnedId);
+        if (!pinned || !pinned.rect) return;
+        const frame = safeFrame();
+        const guards = protectedRects();
+        for (const site of state.sites) {
+          if (site.id === pinnedId) continue;
+          fitAndPlace(site, frame, [pinned.rect], guards);
+        }
+      }
+
+      function restoreVisibleStateAfterRecompose() {
+        if (state.pinnedId) prepareRelationPlacements(state.pinnedId);
+        for (const site of state.sites) {
+          site.el.classList.remove('is-readable', 'is-pinned', 'is-preview-fading', 'is-pinned-fading');
+          setSiteVisual(site, 0, 1);
+        }
+        if (state.pinnedId) {
+          const pinned = findSite(state.pinnedId);
+          if (pinned) {
+            pinned.el.classList.add('is-pinned');
+            setSiteVisual(pinned, 1, 0);
+          }
+        }
+        if (state.activeId && state.activeId !== state.pinnedId) {
+          const active = findSite(state.activeId);
+          if (active) {
+            setSiteVisual(active, 1, 0);
+          }
+        }
+        updateEntryState();
+      }
+
+      function findSite(id) {
+        return state.sites.find(site => site.id === id) || null;
+      }
+
+      function searchPoint(site) {
+        if (!site || !site.rect) return null;
+        return {
+          x: site.rect.left + site.rect.width / 2,
+          y: site.rect.top + site.rect.height / 2
+        };
+      }
+
+      function distanceToSite(x, y, site) {
+        const point = searchPoint(site);
+        return point ? Math.hypot(point.x - x, point.y - y) : Infinity;
+      }
+
+      function nearest(x, y, max = Infinity, excludeId = null) {
+        let result = null;
+        let best = max;
+        for (const site of state.sites) {
+          if (site.id === excludeId) continue;
+          const distance = distanceToSite(x, y, site);
+          if (distance < best) {
+            best = distance;
+            result = site;
+          }
+        }
+        return result ? { site: result, distance: best } : null;
+      }
+
+      function setSiteVisual(site, opacity, blur) {
+        site.el.style.setProperty('--site-opacity', String(clamp(opacity, 0, 1)));
+        site.el.style.setProperty('--site-blur', `${Math.max(0, blur)}px`);
+        site.el.classList.toggle(
+          'is-readable',
+          opacity >= CONFIG.READABLE_THRESHOLD && !site.el.classList.contains('is-pinned')
+        );
+      }
+
+      function resetDeadline(name) {
+        state.deadlines[name] = 0;
+        state.remaining[name] = 0;
+      }
+
+      function parseBlur(filterValue) {
+        const match = /blur\(([-\d.]+)px\)/.exec(filterValue || '');
+        return match ? Math.max(0, Number(match[1])) : 0;
+      }
+
+      function cancelPreviewFade(preserveVisual = false) {
+        clearTimeout(state.timers.previewFade);
+        state.timers.previewFade = 0;
+        resetDeadline('previewFade');
+        const id = state.previewFadeId;
+        state.previewFadeId = null;
+        if (!id) return;
+        const site = findSite(id);
+        if (!site) return;
+        const opacity = parseFloat(getComputedStyle(site.el).opacity) || 0;
+        const blur = parseBlur(getComputedStyle(site.el).filter);
+        site.el.style.transition = 'none';
+        site.el.style.opacity = String(opacity);
+        site.el.style.filter = `blur(${blur}px)`;
+        site.el.classList.remove('is-preview-fading');
+        site.el.getBoundingClientRect();
+        if (!preserveVisual) {
+          site.el.style.opacity = '';
+          site.el.style.filter = '';
+          site.el.style.transition = '';
+          site.el.classList.remove('is-readable');
+          setSiteVisual(site, 0, 1);
+        }
+      }
+
+      function clearTemporaryVisual(exceptId = null) {
+        if (state.previewFadeId && state.previewFadeId !== exceptId) cancelPreviewFade(false);
+        for (const site of state.sites) {
+          if (site.id === state.pinnedId || site.id === exceptId) continue;
+          site.el.classList.remove('is-readable', 'is-preview-fading');
+          site.el.style.opacity = '';
+          site.el.style.filter = '';
+          site.el.style.transition = '';
+          setSiteVisual(site, 0, 1);
+        }
+      }
+
+      function revealTemporary(id, strength = 1, source = 'search') {
+        if (state.suspended) return;
+        if (id === state.pinnedId) {
+          clearTemporary();
+          return;
+        }
+
+        const site = findSite(id);
+        if (!site) return;
+
+        clearTimeout(state.timers.temporary);
+        state.timers.temporary = 0;
+        resetDeadline('temporary');
+        if (state.previewFadeId === id) cancelPreviewFade(true);
+        const changed = state.activeId !== id;
+        clearTemporaryVisual(id);
+
+        site.el.style.opacity = '';
+        site.el.style.filter = '';
+        site.el.style.transition = '';
+        state.activeId = id;
+        site.el.classList.remove('is-preview-fading');
+        setSiteVisual(site, strength, (1 - strength) * 1.15);
+        if (strength >= CONFIG.READABLE_THRESHOLD) {
+          announce(site.poem);
+          if (source === 'search' || source === 'touch-move' || source === 'keyboard') {
+            markGuideExplored();
+          }
+        }
+        if (strength >= CONFIG.RELATION_THRESHOLD) establishRelation(id);
+        updateEntryState();
+      }
+
+      function finishPreviewFade(id, site) {
+        if (state.previewFadeId !== id) return;
+        clearTimeout(state.timers.previewFade);
+        state.timers.previewFade = 0;
+        resetDeadline('previewFade');
+        state.previewFadeId = null;
+        site.el.classList.remove('is-readable', 'is-preview-fading');
+        site.el.style.opacity = '';
+        site.el.style.filter = '';
+        site.el.style.transition = '';
+        setSiteVisual(site, 0, 1);
+        if (site.baseRect && site.id !== state.pinnedId) applyRect(site, site.baseRect);
+        if (!state.activeId && !state.pinnedId) live.textContent = '';
+        scheduleEntryUpdate();
+      }
+
+      function startPreviewFade(id, duration = CONFIG.TOUCH_PREVIEW_FADE_MS, fromVisual = null) {
+        const site = findSite(id);
+        if (!site) return;
+        cancelPreviewFade(false);
+        state.previewFadeId = id;
+        state.deadlines.previewFade = performance.now() + duration;
+        state.remaining.previewFade = duration;
+
+        if (fromVisual) {
+          site.el.style.transition = 'none';
+          site.el.style.opacity = String(fromVisual.opacity);
+          site.el.style.filter = `blur(${fromVisual.blur}px)`;
+          site.el.getBoundingClientRect();
+        }
+
+        site.el.style.transitionDuration = `${duration}ms`;
+        site.el.classList.add('is-preview-fading');
+        requestAnimationFrame(() => {
+          site.el.style.opacity = '';
+          site.el.style.filter = '';
+          site.el.style.transitionProperty = '';
+          site.el.style.transitionTimingFunction = '';
+        });
+
+        state.timers.previewFade = setTimeout(
+          () => finishPreviewFade(id, site),
+          duration + 60
+        );
+      }
+
+      function clearTemporary(immediate = false) {
+        clearTimeout(state.timers.temporary);
+        state.timers.temporary = 0;
+        resetDeadline('temporary');
+        const id = state.activeId;
+        if (!id) {
+          scheduleEntryUpdate();
+          return;
+        }
+        const site = findSite(id);
+        state.activeId = null;
+        if (!site || id === state.pinnedId || site.hovered || site.el.matches(':focus-visible')) {
+          updateEntryState();
+          return;
+        }
+
+        if (immediate || reducedMotion.matches) {
+          cancelPreviewFade(false);
+          site.el.classList.remove('is-readable', 'is-preview-fading');
+          setSiteVisual(site, 0, 1);
+          if (site.baseRect && site.id !== state.pinnedId) applyRect(site, site.baseRect);
+          live.textContent = '';
+          scheduleEntryUpdate();
+          return;
+        }
+
+        startPreviewFade(id);
+        updateEntryState();
+      }
+
+      function scheduleTemporaryHide(delay) {
+        if (state.suspended) return;
+        clearTimeout(state.timers.temporary);
+        state.deadlines.temporary = performance.now() + delay;
+        state.remaining.temporary = delay;
+        state.timers.temporary = setTimeout(() => {
+          state.timers.temporary = 0;
+          resetDeadline('temporary');
+          clearTemporary(false);
+        }, delay);
+      }
+
+      function establishRelation(id) {
+        if (!state.pinnedId || id === state.pinnedId || state.relationExtended) return;
+        state.relationId = id;
+        state.relationExtended = true;
+        if (state.timers.pinHold && state.pinnedId) {
+          clearTimeout(state.timers.pinHold);
+          state.timers.pinHold = 0;
+          resetDeadline('pinHold');
+          schedulePinHold(state.pinnedId, CONFIG.PIN_RELATION_HOLD_MS);
+        }
+      }
+
+      function clearPinTimers() {
+        clearTimeout(state.timers.pinHold);
+        clearTimeout(state.timers.pinFade);
+        state.timers.pinHold = 0;
+        state.timers.pinFade = 0;
+        resetDeadline('pinHold');
+        resetDeadline('pinFade');
+        if (state.pinFadeCleanup) {
+          state.pinFadeCleanup();
+          state.pinFadeCleanup = null;
+        }
+      }
+
+      function finishPinnedLifecycle(id, site) {
+        if (state.pinnedId !== id) return;
+        removePinnedVisual(id);
+        state.pinnedId = null;
+        state.relationId = null;
+        state.relationExtended = false;
+        restoreBasePlacements(state.activeId);
+        if (!state.activeId) live.textContent = '';
+        scheduleEntryUpdate();
+      }
+
+      function waitForPinnedFade(id, site, duration = CONFIG.PIN_FADE_MS) {
+        let finished = false;
+
+        const cleanup = () => {
+          site.el.removeEventListener('transitionend', onTransitionEnd);
+          site.el.removeEventListener('transitioncancel', onTransitionCancel);
+          clearTimeout(state.timers.pinFade);
+          state.timers.pinFade = 0;
+        };
+
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          resetDeadline('pinFade');
+          if (state.pinFadeCleanup === cleanup) state.pinFadeCleanup = null;
+          finishPinnedLifecycle(id, site);
+        };
+
+        const onTransitionEnd = event => {
+          if (event.target === site.el && event.propertyName === 'opacity') finish();
+        };
+
+        const onTransitionCancel = event => {
+          if (event.target === site.el && event.propertyName === 'opacity') cleanup();
+        };
+
+        site.el.addEventListener('transitionend', onTransitionEnd);
+        site.el.addEventListener('transitioncancel', onTransitionCancel);
+        state.deadlines.pinFade = performance.now() + duration;
+        state.remaining.pinFade = duration;
+        state.timers.pinFade = setTimeout(finish, duration + 160);
+        state.pinFadeCleanup = cleanup;
+      }
+
+      function startPinnedFade(id, site, duration = CONFIG.PIN_FADE_MS, fromVisual = null) {
+        if (!site || state.pinnedId !== id) return;
+        if (reducedMotion.matches) {
+          finishPinnedLifecycle(id, site);
+          return;
+        }
+
+        if (fromVisual) {
+          site.el.style.transition = 'none';
+          site.el.style.opacity = String(fromVisual.opacity);
+          site.el.style.filter = `blur(${fromVisual.blur}px)`;
+          site.el.getBoundingClientRect();
+        }
+
+        site.el.style.transitionDuration = `${duration}ms`;
+        site.el.classList.add('is-pinned-fading');
+        requestAnimationFrame(() => {
+          site.el.style.opacity = '';
+          site.el.style.filter = '';
+          site.el.style.transitionProperty = '';
+          site.el.style.transitionTimingFunction = '';
+        });
+        waitForPinnedFade(id, site, duration);
+      }
+
+      function removePinnedVisual(id) {
+        const site = findSite(id);
+        if (!site) return;
+        site.el.classList.remove('is-pinned', 'is-pinned-fading', 'is-readable');
+        site.el.style.opacity = '';
+        site.el.style.filter = '';
+        site.el.style.transition = '';
+        setSiteVisual(site, 0, 1);
+      }
+
+      function schedulePinHold(id, duration) {
+        const site = findSite(id);
+        if (!site || state.pinnedId !== id) return;
+        state.deadlines.pinHold = performance.now() + duration;
+        state.remaining.pinHold = duration;
+        state.timers.pinHold = setTimeout(() => {
+          state.timers.pinHold = 0;
+          resetDeadline('pinHold');
+          startPinnedFade(id, site);
+        }, duration);
+      }
+
+      function pin(id) {
+        if (state.suspended) return;
+        const site = findSite(id);
+        if (!site) return;
+        const selectedRect = site.rect ? { ...site.rect } : null;
+
+        clearPinTimers();
+        clearTimeout(state.timers.temporary);
+        state.timers.temporary = 0;
+        resetDeadline('temporary');
+        cancelPreviewFade(false);
+
+        if (state.pinnedId && state.pinnedId !== id) {
+          removePinnedVisual(state.pinnedId);
+          restoreBasePlacements();
+          if (selectedRect) applyRect(site, selectedRect);
+        }
+        if (state.activeId && state.activeId !== id) {
+          const active = findSite(state.activeId);
+          if (active) {
+            active.el.classList.remove('is-readable', 'is-preview-fading');
+            setSiteVisual(active, 0, 1);
+          }
+        }
+
+        state.pinnedId = id;
+        markGuideKept();
+        state.relationId = null;
+        state.relationExtended = false;
+        state.activeId = null;
+        site.el.style.opacity = '';
+        site.el.style.filter = '';
+        site.el.style.transition = '';
+        site.el.classList.remove('is-readable', 'is-preview-fading', 'is-pinned-fading');
+        site.el.classList.add('is-pinned');
+        setSiteVisual(site, 1, 0);
+        announce(site.poem);
+        prepareRelationPlacements(id);
+        updateEntryState();
+        schedulePinHold(id, CONFIG.PIN_SOLO_HOLD_MS);
+      }
+
+      function dismissPinned() {
+        clearPinTimers();
+        if (state.pinnedId) removePinnedVisual(state.pinnedId);
+        state.pinnedId = null;
+        state.relationId = null;
+        state.relationExtended = false;
+        restoreBasePlacements(state.activeId);
+        if (!state.activeId) live.textContent = '';
+        scheduleEntryUpdate();
+      }
+
+      function searchAt(x, y, pointerType = 'mouse', source = null) {
+        const { outer, inner } = revealRadii();
+        const found = nearest(x, y, outer, state.pinnedId);
+        if (!found) {
+          if (pointerType === 'mouse') scheduleTemporaryHide(CONFIG.DESKTOP_EXIT_MS);
+          return null;
+        }
+        const raw = clamp((outer - found.distance) / Math.max(1, outer - inner), 0, 1);
+        const strength = raw * raw * (3 - 2 * raw);
+        revealTemporary(
+          found.site.id,
+          strength,
+          source || (pointerType === 'touch' ? 'touch' : 'search')
+        );
+        return found.site;
+      }
+
+      function beginSearch(x, y, type, source = null) {
+        state.searching = true;
+        state.pointer = { x, y, active: true, type };
+        setProximityField(x, y, true);
+        updateEntryState();
+        return searchAt(x, y, type, source);
+      }
+
+      function endSearch(type, preserveTouchPreview = false) {
+        state.searching = false;
+        state.pointer.active = false;
+        hideProximityField(type === 'touch' ? 280 : 0);
+        if (type === 'touch' && preserveTouchPreview && state.activeId) {
+          scheduleTemporaryHide(CONFIG.TOUCH_DRAG_PREVIEW_MS);
+        } else if (type === 'mouse' && state.activeId) {
+          scheduleTemporaryHide(CONFIG.DESKTOP_EXIT_MS);
+        }
+        updateEntryState();
+      }
+
+      field.addEventListener('pointermove', event => {
+        if (state.suspended || event.target.closest('.signature')) return;
+        if (state.mode !== 'desktop' || event.pointerType === 'touch') return;
+
+        if (event.target.closest('.haiku')) {
+          setProximityField(event.clientX, event.clientY, true);
+          state.searching = true;
+          state.pointer = { x: event.clientX, y: event.clientY, active: true, type: event.pointerType || 'mouse' };
+          updateEntryState();
+          return;
+        }
+        beginSearch(event.clientX, event.clientY, event.pointerType || 'mouse', 'search');
+      }, { passive: true });
+
+      field.addEventListener('pointerleave', event => {
+        if (state.suspended) return;
+        if (state.mode === 'desktop' && event.pointerType !== 'touch') endSearch('mouse');
+      }, { passive: true });
+
+      field.addEventListener('pointerdown', event => {
+        if (state.suspended || event.target.closest('.signature')) return;
+        if (event.pointerType !== 'touch' && state.mode === 'desktop') return;
+
+        const hit = event.target.closest('.haiku');
+        state.touch = {
+          id: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          lastX: event.clientX,
+          lastY: event.clientY,
+          startedAt: performance.now(),
+          moved: false,
+          hitId: hit ? hit.dataset.id : null
+        };
+
+        try { field.setPointerCapture(event.pointerId); } catch (_) {}
+        beginSearch(event.clientX, event.clientY, 'touch', 'touch-down');
+      }, { passive: true });
+
+      field.addEventListener('pointermove', event => {
+        if (!state.touch || state.touch.id !== event.pointerId) return;
+        state.touch.lastX = event.clientX;
+        state.touch.lastY = event.clientY;
+        if (Math.hypot(event.clientX - state.touch.startX, event.clientY - state.touch.startY) > CONFIG.TOUCH_TAP_MOVE_PX) {
+          state.touch.moved = true;
+        }
+        beginSearch(
+          event.clientX,
+          event.clientY,
+          'touch',
+          state.touch.moved ? 'touch-move' : 'touch-down'
+        );
+      }, { passive: true });
+
+      field.addEventListener('pointerup', event => {
+        if (!state.touch || state.touch.id !== event.pointerId) return;
+
+        const touch = state.touch;
+        state.touch = null;
+        const elapsed = performance.now() - touch.startedAt;
+        const moved = Math.hypot(event.clientX - touch.startX, event.clientY - touch.startY);
+        const isTap = !touch.moved && moved <= CONFIG.TOUCH_TAP_MOVE_PX && elapsed <= CONFIG.TOUCH_TAP_MAX_MS;
+        const found = searchAt(event.clientX, event.clientY, 'touch', 'touch-up');
+
+        state.ignoreClickUntil = performance.now() + CONFIG.TOUCH_CLICK_GUARD_MS;
+
+        if (isTap) {
+          const targetId = touch.hitId || (found ? found.id : null);
+          if (targetId) {
+            if (state.pinnedId === targetId) dismissPinned();
+            else pin(targetId);
+          } else {
+            clearTemporary(false);
+          }
+          endSearch('touch', false);
+        } else {
+          endSearch('touch', Boolean(found || state.activeId));
+        }
+
+        try { field.releasePointerCapture(event.pointerId); } catch (_) {}
+      }, { passive: true });
+
+      field.addEventListener('pointercancel', event => {
+        state.touch = null;
+        endSearch('touch', Boolean(state.activeId));
+        try { field.releasePointerCapture(event.pointerId); } catch (_) {}
+      }, { passive: true });
+
+      field.addEventListener('click', event => {
+        if (state.suspended || event.target.closest('.signature')) return;
+        if (performance.now() < state.ignoreClickUntil) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
+        if (event.target.closest('.haiku')) return;
+        if (state.mode !== 'desktop' || !state.activeId) return;
+        const active = findSite(state.activeId);
+        if (!active) return;
+        const distance = distanceToSite(event.clientX, event.clientY, active);
+        if (distance <= revealRadii().outer) pin(active.id);
+      }, true);
+
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          if (statementDialog.open) {
+            closeStatement({ useHistory: true });
+            return;
+          }
+          if (state.pinnedId) dismissPinned();
+          else clearTemporary(true);
+        }
+      });
+
+      function recompose() {
+        state.viewport = visualViewportMetrics();
+        buildSites();
+        hideProximityField();
+      }
+
+      function scheduleRecompose() {
+        clearTimeout(state.timers.resize);
+        if (state.suspended) {
+          state.pendingRecompose = true;
+          return;
+        }
+        state.timers.resize = setTimeout(recompose, 90);
+      }
+
+      addEventListener('resize', scheduleRecompose, { passive: true });
+      addEventListener('orientationchange', scheduleRecompose, { passive: true });
+      if (visualViewport) {
+        visualViewport.addEventListener('resize', scheduleRecompose, { passive: true });
+        visualViewport.addEventListener('scroll', scheduleRecompose, { passive: true });
+      }
+      if (typeof fineHover.addEventListener === 'function') fineHover.addEventListener('change', scheduleRecompose);
+      document.fonts.ready.then(scheduleRecompose).catch(() => {});
+
+      function pauseTimer(name) {
+        const timerName = name;
+        if (!state.timers[timerName] || !state.deadlines[name]) return;
+        state.remaining[name] = Math.max(0, state.deadlines[name] - performance.now());
+        clearTimeout(state.timers[timerName]);
+        state.timers[timerName] = 0;
+      }
+
+      function pausePinFade() {
+        if (!state.pinnedId) return;
+        const site = findSite(state.pinnedId);
+        if (!site || !site.el.classList.contains('is-pinned-fading')) return;
+        state.remaining.pinFade = Math.max(0, state.deadlines.pinFade - performance.now());
+        const style = getComputedStyle(site.el);
+        state.pausedVisuals.pin = {
+          opacity: parseFloat(style.opacity) || 0,
+          blur: parseBlur(style.filter)
+        };
+        if (state.pinFadeCleanup) {
+          state.pinFadeCleanup();
+          state.pinFadeCleanup = null;
+        }
+        clearTimeout(state.timers.pinFade);
+        state.timers.pinFade = 0;
+        site.el.style.transition = 'none';
+        site.el.style.opacity = String(state.pausedVisuals.pin.opacity);
+        site.el.style.filter = `blur(${state.pausedVisuals.pin.blur}px)`;
+        site.el.classList.remove('is-pinned-fading');
+        site.el.getBoundingClientRect();
+      }
+
+      function pausePreviewFade() {
+        if (!state.previewFadeId) return;
+        const site = findSite(state.previewFadeId);
+        if (!site) return;
+        state.remaining.previewFade = Math.max(0, state.deadlines.previewFade - performance.now());
+        const style = getComputedStyle(site.el);
+        state.pausedVisuals.preview = {
+          id: state.previewFadeId,
+          opacity: parseFloat(style.opacity) || 0,
+          blur: parseBlur(style.filter)
+        };
+        clearTimeout(state.timers.previewFade);
+        state.timers.previewFade = 0;
+        site.el.style.transition = 'none';
+        site.el.style.opacity = String(state.pausedVisuals.preview.opacity);
+        site.el.style.filter = `blur(${state.pausedVisuals.preview.blur}px)`;
+        site.el.classList.remove('is-preview-fading');
+        site.el.getBoundingClientRect();
+      }
+
+      function suspendField() {
+        if (state.suspended) return;
+        state.suspended = true;
+        state.fieldSnapshot = {
+          searching: state.searching,
+          pointer: { ...state.pointer }
+        };
+        pauseTimer('temporary');
+        pauseTimer('pinHold');
+        pausePinFade();
+        pausePreviewFade();
+        state.searching = false;
+        hideProximityField();
+        live.textContent = '';
+        field.classList.add('is-statement-covered');
+      }
+
+      function resumeField() {
+        if (!state.suspended) return;
+        state.suspended = false;
+
+        if (state.pendingRecompose) {
+          state.pendingRecompose = false;
+          recompose();
+        }
+
+        if (state.pinnedId && state.remaining.pinHold > 0 && !state.pausedVisuals.pin) {
+          schedulePinHold(state.pinnedId, state.remaining.pinHold);
+        } else if (state.pinnedId && state.pausedVisuals.pin) {
+          const site = findSite(state.pinnedId);
+          const remaining = Math.max(1, state.remaining.pinFade);
+          const visual = state.pausedVisuals.pin;
+          state.pausedVisuals.pin = null;
+          startPinnedFade(state.pinnedId, site, remaining, visual);
+        }
+
+        if (state.remaining.temporary > 0 && state.activeId) {
+          scheduleTemporaryHide(state.remaining.temporary);
+        }
+
+        if (state.pausedVisuals.preview) {
+          const visual = state.pausedVisuals.preview;
+          const remaining = Math.max(1, state.remaining.previewFade);
+          state.previewFadeId = null;
+          state.pausedVisuals.preview = null;
+          startPreviewFade(visual.id, remaining, visual);
+        }
+
+        const snapshot = state.fieldSnapshot;
+        state.fieldSnapshot = null;
+        state.searching = Boolean(snapshot && snapshot.searching);
+        if (snapshot && snapshot.pointer) state.pointer = { ...snapshot.pointer };
+        if (state.searching && state.pointer.active) {
+          setProximityField(state.pointer.x, state.pointer.y, true);
+        } else {
+          hideProximityField();
+        }
+        field.classList.remove('is-statement-covered');
+        updateEntryState();
+      }
+
+      function openStatement({ pushHistory = true } = {}) {
+        if (statementDialog.open) return;
+        clearTimeout(state.historyFallback);
+        suspendField();
+        if (pushHistory && location.hash !== '#statement') {
+          try {
+            history.pushState({ winterRoadStatement: true }, '', '#statement');
+            state.statementOpenedByPush = true;
+          } catch (_) {
+            location.hash = 'statement';
+            state.statementOpenedByPush = true;
+          }
+        } else {
+          state.statementOpenedByPush = false;
+        }
+
+        statementDialog.showModal();
+        statementPlane.scrollTop = 0;
+        cancelAnimationFrame(state.statementTransition);
+        state.statementTransition = requestAnimationFrame(() => {
+          statementDialog.classList.add('is-visible');
+          requestAnimationFrame(() => statementCopy.focus({ preventScroll: true }));
+        });
+      }
+
+      function completeStatementClose() {
+        clearTimeout(state.statementTransition);
+        clearTimeout(state.historyFallback);
+        statementDialog.classList.remove('is-visible');
+        if (statementDialog.open) statementDialog.close();
+        resumeField();
+        requestAnimationFrame(() => signature.focus({ preventScroll: true }));
+      }
+
+      function closeStatement({ useHistory = true } = {}) {
+        if (!statementDialog.open) return;
+        if (useHistory && state.statementOpenedByPush && location.hash === '#statement') {
+          history.back();
+          clearTimeout(state.historyFallback);
+          state.historyFallback = setTimeout(() => {
+            if (!statementDialog.open || location.hash !== '#statement') return;
+            try {
+              history.replaceState(history.state, '', `${location.pathname}${location.search}`);
+            } catch (_) {
+              location.hash = '';
+            }
+            state.statementOpenedByPush = false;
+            closeStatement({ useHistory: false });
+          }, 180);
+          return;
+        }
+
+        if (location.hash === '#statement') {
+          try {
+            history.replaceState(history.state, '', `${location.pathname}${location.search}`);
+          } catch (_) {
+            location.hash = '';
+          }
+        }
+
+        statementDialog.classList.remove('is-visible');
+        const delay = reducedMotion.matches ? 1 : 330;
+        clearTimeout(state.statementTransition);
+        state.statementTransition = setTimeout(completeStatementClose, delay);
+      }
+
+      function syncStatementToURL() {
+        if (location.hash === '#statement') {
+          if (!statementDialog.open) openStatement({ pushHistory: false });
+        } else if (statementDialog.open) {
+          state.statementOpenedByPush = false;
+          closeStatement({ useHistory: false });
+        }
+      }
+
+      signature.addEventListener('click', event => {
+        event.stopPropagation();
+        openStatement({ pushHistory: true });
+      });
+
+      statementReturn.addEventListener('click', () => closeStatement({ useHistory: true }));
+
+      statementDialog.addEventListener('cancel', event => {
+        event.preventDefault();
+        closeStatement({ useHistory: true });
+      });
+
+      statementDialog.addEventListener('keydown', event => {
+        if (event.key !== 'Tab') return;
+        event.preventDefault();
+        statementReturn.focus({ preventScroll: true });
+      });
+
+      statementDialog.addEventListener('click', event => {
+        if (event.target === statementDialog) event.preventDefault();
+      });
+
+      addEventListener('popstate', syncStatementToURL);
+      addEventListener('hashchange', syncStatementToURL);
+
+      window.__winterRoadDiagnostics = {
+        getState: () => ({
+          mode: state.mode,
+          activeId: state.activeId,
+          pinnedId: state.pinnedId,
+          searching: state.searching,
+          entryReading: entry.classList.contains('is-reading'),
+          entrySearching: entry.classList.contains('is-searching'),
+          titleOpacity: getComputedStyle(entry.querySelector('.root-inscription')).opacity,
+          guideOpacity: getComputedStyle(guide).opacity,
+          guideMode: state.guideLearned ? 'hidden' : 'full',
+          guideExplored: state.guideExplored,
+          guideKept: state.guideKept,
+          guideLearned: state.guideLearned,
+          signatureColor: getComputedStyle(signature).color,
+          fieldReading: field.classList.contains('is-reading'),
+          fieldSearching: field.classList.contains('is-searching'),
+          statementOpen: statementDialog.open,
+          suspended: state.suspended,
+          urlHash: location.hash,
+          statementOpenedByPush: state.statementOpenedByPush,
+          layoutRotation: state.layoutRotation,
+          layoutProfile: state.layoutProfile,
+          relationId: state.relationId,
+          relationExtended: state.relationExtended,
+          remaining: { ...state.remaining },
+          pausedVisuals: JSON.parse(JSON.stringify(state.pausedVisuals))
+        }),
+        getSites: () => state.sites.map(site => ({
+          id: site.id,
+          cell: { ...site.cell },
+          cellIndex: site.cellIndex,
+          rect: site.rect ? { ...site.rect } : null,
+          searchCenter: searchPoint(site),
+          baseRect: site.baseRect ? { ...site.baseRect } : null,
+          opacity: getComputedStyle(site.el).opacity,
+          classes: [...site.el.classList]
+        })),
+        getSemanticGrid: () => rotateGrid(SEMANTIC_GRID, state.layoutRotation).map(row => [...row]),
+        pinById: id => pin(id),
+        revealById: (id, strength = 1) => revealTemporary(id, strength, 'diagnostic'),
+        dismissPinned: () => dismissPinned(),
+        openStatementNoHistory: () => openStatement({ pushHistory: false }),
+        closeStatementNoHistory: () => closeStatement({ useHistory: false }),
+        config: CONFIG
+      };
+
+      state.layoutRotation = requestedLayoutRotation();
+      state.layoutProfile = layoutProfileName(state.layoutRotation);
+      buildSites();
+      updateEntryState();
+      requestAnimationFrame(syncStatementToURL);
+    })();
+  </script>
+</body>
+</html>
