@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you cite this work, please use the metadata below."
+title: "Winter Road: A Haiga Space"
+abstract: >
+  A born-digital artwork consisting of nine English haiku dispersed across a
+  dark interactive field. The poems are invisible until approached; movement
+  becomes a condition of visibility. Each session rotates through four authored
+  spatial profiles. The work takes the form of a digital haiga space.
+authors:
+  - family-names: Zare
+    given-names: Mohammad
+    alias: mozare
+type: software
+version: "1.0.0"
+date-released: 2026-07-14
+url: "https://mozareeduge.github.io/winter-road/"
+repository-code: "https://github.com/mozareeduge/winter-road"
+license-url: "https://github.com/mozareeduge/winter-road/blob/main/RIGHTS.md"
+keywords:
+  - electronic literature
+  - digital poetry
+  - haiku
+  - haiga
+  - interactive poetry
+  - born-digital artwork
