@@ -114,11 +114,12 @@ if src is not None:
             err(f"missing poem IDs: {missing}")
         if extra:
             err(f"unexpected poem IDs: {extra}")
+    line_errors_before = len(ERRORS)
     for pid, lines in EXPECTED_POEMS:
         for line in lines:
             if line not in src:
                 err(f"poem line missing: '{line}' (id: {pid})")
-    else:
+    if len(ERRORS) == line_errors_before:
         ok("all poem lines present")
 
 
