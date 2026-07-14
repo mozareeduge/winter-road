@@ -1,0 +1,10 @@
+{
+  "active_task": "AUDIT-01",
+  "base_commit": "997489b0840e78f106608d34651b32be8f195a03",
+  "baseline_workspace": {
+    "winter_road.html": "997489b0840e78f106608d34651b32be8f195a03",
+    "README.md": "997489b0840e78f106608d34651b32be8f195a03"
+  },
+  "control_plane_fingerprint": null,
+  "started_at": "2026-07-14T00:00:00Z"
+}

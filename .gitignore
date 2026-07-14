@@ -1,0 +1,6 @@
+# Project Weave — merge from .gitignore.weave-snippet
+.claude/settings.local.json
+.claude/agent-memory-local/
+harness/private/
+**/__pycache__/
+*.pyc

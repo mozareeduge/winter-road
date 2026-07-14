@@ -1,0 +1,179 @@
+{
+  "schema_version": "1.0",
+  "tasks": [
+    {
+      "id": "BOOTSTRAP-01",
+      "title": "Establish verified project baseline and bounded work graph",
+      "type": "bootstrap",
+      "status": "completed",
+      "depends_on": [],
+      "authority": [
+        {
+          "path": "harness/PROJECT.md",
+          "priority": 100,
+          "required": true,
+          "max_chars": 10000
+        },
+        {
+          "path": "harness/AUTHORITY.md",
+          "priority": 100,
+          "required": true,
+          "max_chars": 7000
+        },
+        {
+          "path": "harness/POLICY.md",
+          "priority": 95,
+          "required": true,
+          "max_chars": 8000
+        }
+      ],
+      "context": [
+        {
+          "path": "winter_road.html",
+          "priority": 80,
+          "required": true,
+          "max_chars": 60000
+        }
+      ],
+      "scope": {
+        "allowed": [
+          "harness/**",
+          ".claude/**",
+          "artifacts/**",
+          "CLAUDE.md",
+          ".gitignore"
+        ],
+        "forbidden": [
+          "winter_road.html",
+          "README.md"
+        ]
+      },
+      "deliverables": [
+        "harness/CHARTER.md",
+        "harness/BASELINE.md"
+      ],
+      "checks": [
+        {
+          "id": "harness-structure",
+          "kind": "manual",
+          "description": "Verify harness directory and required files exist",
+          "status": "pass",
+          "evidence": "artifacts/BOOTSTRAP-01/harness-check.md",
+          "attested": "2026-07-14"
+        },
+        {
+          "id": "independent-review",
+          "kind": "review",
+          "status": "pass",
+          "evidence": "artifacts/BOOTSTRAP-01/review.md",
+          "attested": "2026-07-14",
+          "note": "Review obtained post-task from weave-reviewer subagent (fresh context). Evidence file created after review."
+        }
+      ],
+      "review_required": true,
+      "human_checkpoint": false,
+      "completed_at": "2026-07-14",
+      "budgets": {
+        "pack": 9000,
+        "return": 900
+      },
+      "next_action": "Proceed to AUDIT-01."
+    },
+    {
+      "id": "AUDIT-01",
+      "title": "Accessibility and interaction audit of winter_road.html",
+      "type": "audit",
+      "status": "ready",
+      "depends_on": ["BOOTSTRAP-01"],
+      "authority": [
+        {
+          "path": "harness/PROJECT.md",
+          "priority": 100,
+          "required": true,
+          "max_chars": 10000
+        },
+        {
+          "path": "harness/BASELINE.md",
+          "priority": 90,
+          "required": true,
+          "max_chars": 8000
+        }
+      ],
+      "context": [
+        {
+          "path": "winter_road.html",
+          "priority": 80,
+          "required": true,
+          "max_chars": 60000
+        }
+      ],
+      "scope": {
+        "allowed": [
+          "winter_road.html",
+          "artifacts/AUDIT-01/**",
+          "harness/DECISIONS.jsonl",
+          "harness/STATE.md",
+          "harness/RUN.json",
+          "harness/TASKS.json"
+        ],
+        "forbidden": [
+          "harness/PROJECT.md",
+          "harness/AUTHORITY.md",
+          "harness/POLICY.md",
+          "harness/CONFIG.json"
+        ]
+      },
+      "deliverables": [
+        "artifacts/AUDIT-01/findings.md"
+      ],
+      "acceptance_criteria": [
+        "All 9 poems are present with correct IDs and authored text (machine-verifiable).",
+        "SEMANTIC_GRID, DESKTOP_CELLS, MOBILE_CELLS match baseline values (machine-verifiable).",
+        "CONFIG timing constants match baseline values (machine-verifiable).",
+        "All ARIA attributes required by PROJECT.md success criteria are present (code inspection).",
+        "No external resource URLs (script, link, img, fetch) appear in the source (machine-verifiable).",
+        "Self-contained size under 100 KB (file size check).",
+        "focus-visible styles present for all interactive elements (code inspection).",
+        "prefers-reduced-motion handling present and correct (code inspection).",
+        "Statement dialog focus management: showModal, focus on statementCopy, focus return to signature (code inspection).",
+        "Findings document lists all identified gaps with severity and whether they violate authored intent or are open questions."
+      ],
+      "checks": [
+        {
+          "id": "poem-integrity",
+          "kind": "command",
+          "command": ["python3", "-c",
+            "import json, re; html = open('winter_road.html').read(); poems = ['winter-road-absence-wind','winter-road-darkness-wind','winter-road-only-wind','winter-darkness-road-driven','dark-road-only-wind','winter-silence-only-wind','winter-road-white-absence','winter-darkness-white','winter-road-absence-white']; missing = [p for p in poems if p not in html]; print('PASS' if not missing else 'FAIL missing: ' + str(missing))"],
+          "required": true
+        },
+        {
+          "id": "no-external-resources",
+          "kind": "command",
+          "command": ["python3", "-c",
+            "import re; html = open('winter_road.html').read(); hits = re.findall(r'(?:src|href|url)\\s*[=:(][\\s\\'\"]*https?://', html, re.I); print('PASS' if not hits else 'FAIL external: ' + str(hits))"],
+          "required": true
+        },
+        {
+          "id": "file-size",
+          "kind": "command",
+          "command": ["python3", "-c",
+            "import os; sz = os.path.getsize('winter_road.html'); print(f'PASS {sz} bytes' if sz < 102400 else f'FAIL {sz} bytes > 100KB')"],
+          "required": true
+        },
+        {
+          "id": "independent-review",
+          "kind": "review",
+          "required": true
+        }
+      ],
+      "review_required": true,
+      "human_checkpoint": true,
+      "human_checkpoint_note": "Review AUDIT-01 findings before proceeding to any patch work. Artistic and design decisions require human authority.",
+      "budgets": {
+        "pack": 9000,
+        "return": 900
+      },
+      "next_action": "Run checks, produce findings.md, obtain review, then surface to human checkpoint."
+    }
+  ]
+}

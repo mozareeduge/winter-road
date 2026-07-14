@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.1",
+  "project": {
+    "id": "winter-road",
+    "name": "winter-road — a haiga space",
+    "kind": "digital-art",
+    "repository": "mozareeduge/winter-road"
+  },
+  "model": {
+    "required": "claude-sonnet-4-6",
+    "effort": "medium"
+  },
+  "context": {
+    "state_token_budget": 1200,
+    "standard_pack_budget": 7000,
+    "deep_pack_budget": 12000,
+    "review_pack_budget": 7000,
+    "handoff_token_budget": 1200,
+    "worker_return_budget": 900
+  },
+  "execution": {
+    "require_git": true,
+    "single_active_task": true,
+    "default_review_required": true,
+    "require_clean_start": false,
+    "allow_check_command_override": false,
+    "scripts_available": false,
+    "scripts_note": "scripts/weave.py absent from this installation; harness operated manually",
+    "operational_globs": [
+      "harness/STATE.md",
+      "harness/RUN.json",
+      "harness/TASKS.json",
+      "harness/DECISIONS.jsonl",
+      "harness/PACKS/**",
+      "harness/SNAPSHOTS/**",
+      "harness/private/**",
+      "artifacts/**",
+      ".claude/agent-memory-local/**",
+      "**/__pycache__/**",
+      "**/*.pyc"
+    ],
+    "governance_paths": [
+      "harness/CONFIG.json",
+      "harness/PROJECT.md",
+      "harness/AUTHORITY.md",
+      "harness/POLICY.md"
+    ],
+    "max_claude_md_lines": 200,
+    "allow_commit_preexisting_dirty": false
+  },
+  "privacy": {
+    "private_globs": [
+      "harness/private/**",
+      ".claude/agent-memory-local/**"
+    ],
+    "default_public_forbidden_globs": [
+      "**/_WORKMAP.md",
+      "**/HANDOFF.md",
+      "**/*.log",
+      "**/.env",
+      "**/.env.*"
+    ],
+    "default_public_forbidden_terms": [
+      "api_key=",
+      "secret_key=",
+      "session link",
+      "raw conversation"
+    ]
+  }
+}
