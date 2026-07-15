@@ -10,7 +10,7 @@ jobs:
     name: Tag, release, and update repo metadata
     runs-on: ubuntu-latest
     steps:
-      - name: Create tag v1.0.0
+      - name: Create tag v1.0.0 (idempotent)
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -29,7 +29,7 @@ jobs:
               } else { throw e; }
             }
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release (idempotent)
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -61,27 +61,26 @@ jobs:
             }
 
       - name: Update repository description and homepage
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.TAROKE_RELEASE_TOKEN }}
-          script: |
-            const result = await github.rest.repos.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              description: 'Winter Road — a digital haiga space by mozare.',
-              homepage: 'https://mozareeduge.github.io/winter-road/'
-            });
-            console.log('Description:', result.data.description);
-            console.log('Homepage:', result.data.homepage);
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Token length: ${#GH_TOKEN}"
+          response=$(curl -s -X PATCH \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/mozareeduge/winter-road" \
+            -d '{"description":"Winter Road — a digital haiga space by mozare.","homepage":"https://mozareeduge.github.io/winter-road/"}')
+          echo "Response: $response" | head -c 500
+          echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print('desc:', d.get('description'), 'home:', d.get('homepage'))" 2>/dev/null || echo "(parse failed)"
 
       - name: Update repository topics
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.TAROKE_RELEASE_TOKEN }}
-          script: |
-            await github.rest.repos.replaceAllTopics({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              names: ['electronic-literature', 'digital-poetry', 'haiku', 'haiga', 'interactive-poetry', 'born-digital']
-            });
-            console.log('Topics updated');
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s -X PUT \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/mozareeduge/winter-road/topics" \
+            -d '{"names":["electronic-literature","digital-poetry","haiku","haiga","interactive-poetry","born-digital"]}' | head -c 300
