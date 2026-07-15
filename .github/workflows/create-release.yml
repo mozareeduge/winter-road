@@ -1,0 +1,92 @@
+name: Create v1.0.0 Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Tag, release, and update repo metadata
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create tag v1.0.0
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'refs/tags/v1.0.0',
+                sha: '2c84ff09191a1e10724ee81e2ebc361bd44e5212'
+              });
+              console.log('Tag v1.0.0 created');
+            } catch (e) {
+              if (e.status === 422) {
+                console.log('Tag already exists, verifying...');
+                const tag = await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: 'tags/v1.0.0'
+                });
+                console.log('Tag SHA:', tag.data.object.sha);
+              } else { throw e; }
+            }
+
+      - name: Create GitHub Release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = [
+              'Initial public release.',
+              '',
+              'Nine-haiku born-digital haiga space, self-contained in `index.html`.',
+              '',
+              '- Live work: https://mozareeduge.github.io/winter-road/',
+              '- Citation: see [`CITATION.cff`](https://github.com/mozareeduge/winter-road/blob/v1.0.0/CITATION.cff)',
+              '- Rights: see [`RIGHTS.md`](https://github.com/mozareeduge/winter-road/blob/v1.0.0/RIGHTS.md)'
+            ].join('\n');
+            try {
+              const r = await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: 'v1.0.0',
+                name: 'v1.0.0 — Winter Road: A Haiga Space',
+                body: body,
+                draft: false,
+                prerelease: false
+              });
+              console.log('Release created:', r.data.html_url);
+            } catch (e) {
+              if (e.status === 422) {
+                console.log('Release already exists');
+              } else { throw e; }
+            }
+
+      - name: Update repository description and homepage
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              description: 'Winter Road — a digital haiga space by mozare.',
+              homepage: 'https://mozareeduge.github.io/winter-road/'
+            });
+            console.log('Description and homepage updated');
+
+      - name: Update repository topics
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.replaceAllTopics({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              names: ['electronic-literature', 'digital-poetry', 'haiku', 'haiga', 'interactive-poetry', 'born-digital']
+            });
+            console.log('Topics updated');
