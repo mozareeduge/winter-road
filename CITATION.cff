@@ -9,10 +9,10 @@ abstract: >
 authors:
   - family-names: Zare
     given-names: Mohammad
-    alias: mozare
+    alias: Mozare
 type: software
-version: "1.0.0"
-date-released: 2026-07-14
+version: "1.0.1"
+date-released: 2026-07-18
 url: "https://mozareeduge.github.io/winter-road/"
 repository-code: "https://github.com/mozareeduge/winter-road"
 license-url: "https://github.com/mozareeduge/winter-road/blob/main/RIGHTS.md"

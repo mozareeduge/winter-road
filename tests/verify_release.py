@@ -9,6 +9,7 @@ Uses only Python standard library. Run from repo root:
 Exits 0 on pass, 1 on any failure.
 """
 
+import hashlib
 import os
 import re
 import sys
@@ -45,6 +46,9 @@ required = [
     "CHANGELOG.md",
     "README.md",
     "RIGHTS.md",
+    "sitemap.xml",
+    "robots.txt",
+    "tests/fixtures/body.sha256",
     "tests/verify_release.py",
     ".github/workflows/pages.yml",
 ]
@@ -223,7 +227,7 @@ print("\n[10] No external network dependencies")
 if src is not None:
     external_patterns = [
         r'<script[^>]+src=["\']https?://',
-        r'<link[^>]+href=["\']https?://',
+        r'<link(?![^>]*rel=["\']canonical["\'])[^>]+href=["\']https?://',
         r'@import\s+["\']https?://',
         r'url\(["\']https?://',
         r'fonts\.googleapis\.com',
@@ -269,7 +273,7 @@ else:
         ("Winter Road: A Haiga Space", "title"),
         ("family-names: Zare", "author family name"),
         ("given-names: Mohammad", "author given name"),
-        ("1.0.0", "version 1.0.0"),
+        ("1.0.1", "version 1.0.1"),
         ("mozareeduge.github.io/winter-road", "live URL"),
         ("mozareeduge/winter-road", "repository URL"),
     ]:
@@ -331,6 +335,55 @@ try:
         ok("CNAME not committed")
 except subprocess.CalledProcessError:
     err("could not run git ls-files — run from repo root")
+
+
+# ── v1.0.1 metadata additions ────────────────────────────────────────────────
+
+print("\n[15] v1.0.1 canonical and social metadata")
+if src is not None:
+    for fragment, label in [
+        ('rel="canonical"', "canonical link element"),
+        ("https://mozareeduge.github.io/winter-road/", "canonical URL"),
+        ('property="og:url"', "og:url meta"),
+        ('property="og:site_name"', "og:site_name meta"),
+        ('name="twitter:card"', "twitter:card meta"),
+        ('name="twitter:title"', "twitter:title meta"),
+        ('name="twitter:description"', "twitter:description meta"),
+    ]:
+        if fragment in src:
+            ok(label)
+        else:
+            err(f"missing v1.0.1 metadata: {label}")
+
+
+# ── Body-region integrity ─────────────────────────────────────────────────────
+
+print("\n[16] Body-region integrity")
+fixture_path = os.path.join(ROOT, "tests", "fixtures", "body.sha256")
+if not os.path.isfile(fixture_path):
+    err("tests/fixtures/body.sha256 missing")
+else:
+    stored_hash = open(fixture_path).read().strip()
+    html_bytes = open(os.path.join(ROOT, "index.html"), "rb").read()
+    body_pos = html_bytes.index(b"<body")
+    actual_hash = hashlib.sha256(html_bytes[body_pos:]).hexdigest()
+    if actual_hash == stored_hash:
+        ok(f"body-region hash matches stored fixture")
+    else:
+        err(f"body-region hash changed: {actual_hash} != {stored_hash}")
+
+
+# ── Portfolio entry URL in README ─────────────────────────────────────────────
+
+print("\n[17] Portfolio entry URL in README.md")
+readme = read("README.md")
+if readme is None:
+    err("README.md missing")
+else:
+    if "https://theblackbirdfield.com/works/winter-road/" in readme:
+        ok("portfolio entry URL present in README.md")
+    else:
+        err("portfolio entry URL missing from README.md")
 
 
 # ── Summary ───────────────────────────────────────────────────────────────────
