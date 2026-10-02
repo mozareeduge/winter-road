@@ -1,5 +1,17 @@
 # Winter Road
 
+**by Mohammad Zare (Mozare) · version 1.0.1 · [Experience the work](https://mozareeduge.github.io/winter-road/)**
+
+*Winter Road* is a digital haiga space. Nine haiku inhabit a dark field that withholds them from a single view. A poem becomes legible through proximity, can be held briefly, then recedes as attention moves elsewhere.
+
+**Status:** published work, version 1.0.1; this repository is its public source archive.
+
+**How to cite:** Zare, M. (2026). *Winter Road: A Haiga Space* (Version 1.0.1) [Electronic literature]. https://mozareeduge.github.io/winter-road/
+
+**Rights:** All rights reserved; the source is visible for reading, study and citation only. See [RIGHTS.md](RIGHTS.md).
+
+---
+
 A digital haiga space by Mozare.
 
 **Live work:** https://mozareeduge.github.io/winter-road/  
