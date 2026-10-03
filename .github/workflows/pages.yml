@@ -8,51 +8,47 @@ on:
 
 permissions:
   contents: read
-
 concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: true
-
 defaults:
   run:
     shell: bash
-
 jobs:
   verify:
-    name: Verify release invariants
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
-    steps:
-      - uses: actions/checkout@v6
-      - name: Run release invariant check
-        run: python3 tests/verify_release.py
-
-  deploy:
-    name: Deploy to GitHub Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: verify
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 15
     permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      contents: write
     steps:
-      - uses: actions/checkout@v6
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - name: Stage site
+      - uses: actions/checkout@v4
+      - name: Verify release invariants
+        run: python tests/verify_release.py
+      - name: Stage verified canonical artwork
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
           mkdir -p _site
-          cp index.html _site/index.html
-          cp .nojekyll _site/.nojekyll
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+          cp index.html .nojekyll robots.txt sitemap.xml _site/
+          python -c "import json,os,pathlib; pathlib.Path('_site/release.json').write_text(json.dumps({'commit':os.environ['GITHUB_SHA'],'artwork_version':'1.0.1'},indent=2)+'\n',encoding='utf-8')"
+      - uses: actions/checkout@v4
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
-          path: _site
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
+          ref: gh-pages
+          path: _publish
+      - name: Publish gh-pages without artifact uploads
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp _site/* _publish/
+          cp _site/.nojekyll _publish/.nojekyll
+          cd _publish
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config core.autocrlf false
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish verified source $GITHUB_SHA"
+            git push origin gh-pages
+          fi
