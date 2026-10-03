@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mozareeduge.github.io/winter-road/sitemap.xml
